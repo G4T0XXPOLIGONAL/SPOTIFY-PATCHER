@@ -42,6 +42,15 @@
 
 ---
 
+## ⚠️ Pré-requisitos (MUITO IMPORTANTE)
+
+Para que a suíte funcione perfeitamente no seu computador, você **precisa** ter os seguintes programas instalados:
+
+1. **[VLC Media Player](https://www.videolan.org/vlc/)**: O G4T0XX Player utiliza o motor de áudio do VLC para tocar as músicas do YouTube de forma leve. **Sem ele, o áudio não vai tocar!**
+2. **[Spotify Desktop Oficial (.exe)](https://www.spotify.com/br-pt/download/windows/)**: O Patcher **NÃO FUNCIONA** na versão da Microsoft Store. Se você baixou pela loja do Windows, desinstale e baixe a versão oficial no link.
+
+---
+
 ## 📥 Como Baixar e Usar (Modo Fácil)
 
 Se você quer apenas usar o programa, não precisa instalar código algum:
@@ -71,10 +80,6 @@ Bash
 python main.py
 🛠️ Avisos e Resolução de Problemas
 Conflito com Spicetify: Se você utiliza o Spicetify, o patch do Spotify não encontrará o arquivo xpui.spa. Para usar este patcher, abra o terminal e rode spicetify restore para voltar o Spotify ao formato original antes de aplicar o patch.
-
-Versão da Windows Store: O patch só funciona na versão oficial do Spotify instalada via .exe. A versão da Microsoft Store bloqueia a modificação de arquivos.
-
-VLC Necessário: O G4T0XX Player depende das bibliotecas do VLC instaladas na máquina para reproduzir o áudio.
 
 ⚖️ Aviso Legal
 Este projeto foi criado estritamente para fins educacionais e de estudo sobre manipulação de arquivos locais, automação e consumo de APIs de mídia. Os desenvolvedores não se responsabilizam pelo mau uso da ferramenta ou por eventuais violações dos Termos de Serviço das plataformas citadas.
