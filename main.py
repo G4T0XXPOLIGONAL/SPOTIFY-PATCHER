@@ -24,11 +24,25 @@ def get_caminho_icone(nome_arquivo):
     return os.path.join(base_path, nome_arquivo)
 
 # ============================================================
-# CONFIGURAÇÕES G4T0XX
+# CONFIGURAÇÕES G4T0XX (SISTEMA DE BUSCA INTELIGENTE)
 # ============================================================
-SPOTIFY_EXE = r"C:\Users\PC\AppData\Roaming\Spotify\Spotify.exe"
-SPOTIFY_SPA = r"C:\Users\PC\AppData\Roaming\Spotify\Apps\xpui.spa"
-UPDATE_FOLDER = r"C:\Users\PC\AppData\Local\Spotify\Update"
+APPDATA = os.getenv('APPDATA')
+LOCALAPPDATA = os.getenv('LOCALAPPDATA')
+
+# Caminhos Universais (Para quem baixar do GitHub)
+UNIV_SPOTIFY_EXE = os.path.join(APPDATA, "Spotify", "Spotify.exe") if APPDATA else ""
+UNIV_SPOTIFY_SPA = os.path.join(APPDATA, "Spotify", "Apps", "xpui.spa") if APPDATA else ""
+UNIV_UPDATE_FOLDER = os.path.join(LOCALAPPDATA, "Spotify", "Update") if LOCALAPPDATA else ""
+
+# Caminhos Fixos do seu PC (Plano B de segurança)
+PC_SPOTIFY_EXE = r"C:\Users\PC\AppData\Roaming\Spotify\Spotify.exe"
+PC_SPOTIFY_SPA = r"C:\Users\PC\AppData\Roaming\Spotify\Apps\xpui.spa"
+PC_UPDATE_FOLDER = r"C:\Users\PC\AppData\Local\Spotify\Update"
+
+# Lógica: Se o Universal existir, usa ele. Se não, usa o seu Fixo.
+SPOTIFY_EXE = UNIV_SPOTIFY_EXE if os.path.exists(UNIV_SPOTIFY_EXE) else PC_SPOTIFY_EXE
+SPOTIFY_SPA = UNIV_SPOTIFY_SPA if os.path.exists(UNIV_SPOTIFY_SPA) else PC_SPOTIFY_SPA
+UPDATE_FOLDER = UNIV_UPDATE_FOLDER if os.path.exists(UNIV_UPDATE_FOLDER) else PC_UPDATE_FOLDER
 UPDATE_EXE = os.path.join(UPDATE_FOLDER, "SpotifyUpdate.exe")
 
 COLOR_BG = "#0f0f0f"
@@ -46,32 +60,26 @@ class G4toxxApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # NOME DA JANELA ATUALIZADO
         self.title("SPOTIFY PATCHER - PC EDITION")
         self.geometry("1000x750")
         ctk.set_appearance_mode("dark")
         self.configure(fg_color=COLOR_BG)
         
-        # --- APLICANDO A LOGO NA JANELA ---
         try:
             self.iconbitmap(get_caminho_icone("favicon.ico"))
         except:
-            pass # Se a imagem não for encontrada no teste, ele não crasha
+            pass 
             
-        # Engine VLC
         self.instance = vlc.Instance("--no-video", "--quiet")
         self.player = self.instance.media_player_new()
 
-        # Variáveis da Playlist e Controle
         self.playlist = []
         self.current_song_index = -1
         self.is_slider_dragged = False
 
-        # TÍTULO PRINCIPAL ATUALIZADO
         self.label_main = ctk.CTkLabel(self, text="SPOTIFY PATCHER", font=("Impact", 40), text_color=COLOR_ACCENT)
         self.label_main.pack(pady=10)
 
-        # Abas
         self.tabview = ctk.CTkTabview(self, segmented_button_selected_color=COLOR_ACCENT, segmented_button_unselected_color="#1a1a1a")
         self.tabview.pack(padx=10, pady=5, fill="both", expand=True)
         
@@ -80,19 +88,15 @@ class G4toxxApp(ctk.CTk):
 
         self.setup_player_ui()
         self.setup_patcher_ui()
-
-        # Atualização do tempo e verificação de fim de música
         self.update_time_loop()
 
     # ============================================================
-    # ABA 1: PLAYER YOUTUBE (NOVA INTERFACE)
+    # ABA 1: PLAYER YOUTUBE
     # ============================================================
     def setup_player_ui(self):
-        # --- PARTE SUPERIOR (Busca e Listas) ---
         self.top_frame = ctk.CTkFrame(self.tab_player, fg_color="transparent")
         self.top_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Coluna Esquerda: Busca
         self.left_col = ctk.CTkFrame(self.top_frame, fg_color="transparent", width=450)
         self.left_col.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
@@ -102,7 +106,6 @@ class G4toxxApp(ctk.CTk):
         self.entry = ctk.CTkEntry(search_frame, placeholder_text="Pesquise no YouTube...", width=300, border_color="#333")
         self.entry.pack(side="left", padx=(0, 10), fill="x", expand=True)
         
-        # O "Login" (Puxar cookies do navegador)
         self.browser_var = ctk.StringVar(value="Nenhum")
         self.browser_combo = ctk.CTkComboBox(search_frame, values=["Nenhum", "chrome", "edge", "brave", "firefox"], variable=self.browser_var, width=100)
         self.browser_combo.pack(side="left", padx=(0, 10))
@@ -115,7 +118,6 @@ class G4toxxApp(ctk.CTk):
         self.results_frame = ctk.CTkScrollableFrame(self.left_col, fg_color="#111", border_width=1, border_color="#222")
         self.results_frame.pack(fill="both", expand=True, pady=5)
 
-        # Coluna Direita: Playlist
         self.right_col = ctk.CTkFrame(self.top_frame, fg_color="#111", border_width=1, border_color="#222", width=350)
         self.right_col.pack(side="right", fill="both", expand=True)
 
@@ -124,15 +126,12 @@ class G4toxxApp(ctk.CTk):
         self.playlist_frame = ctk.CTkScrollableFrame(self.right_col, fg_color="transparent")
         self.playlist_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # --- BARRA INFERIOR (Controles) ---
         self.bottom_bar = ctk.CTkFrame(self.tab_player, height=100, fg_color=COLOR_BAR, corner_radius=0)
         self.bottom_bar.pack(side="bottom", fill="x")
 
-        # Info da Música Atual
         self.now_playing_lbl = ctk.CTkLabel(self.bottom_bar, text="Nenhuma música tocando", font=("Arial", 14, "bold"), text_color="white")
         self.now_playing_lbl.pack(pady=(10, 0))
 
-        # Controle de Tempo (Slider interativo)
         time_frame = ctk.CTkFrame(self.bottom_bar, fg_color="transparent")
         time_frame.pack(fill="x", padx=20, pady=5)
 
@@ -142,14 +141,12 @@ class G4toxxApp(ctk.CTk):
         self.seek_slider = ctk.CTkSlider(time_frame, from_=0, to=100, progress_color=COLOR_ACCENT, button_color="white", button_hover_color=COLOR_ACCENT)
         self.seek_slider.set(0)
         self.seek_slider.pack(side="left", fill="x", expand=True, padx=10)
-        # Eventos do mouse para arrastar a barra
         self.seek_slider.bind("<ButtonPress-1>", self.on_slider_press)
         self.seek_slider.bind("<ButtonRelease-1>", self.on_slider_release)
 
         self.time_lbl_total = ctk.CTkLabel(time_frame, text="00:00", text_color="gray", width=40)
         self.time_lbl_total.pack(side="right")
 
-        # Botões Play/Pause/Skip e Volume
         controls_frame = ctk.CTkFrame(self.bottom_bar, fg_color="transparent")
         controls_frame.pack(pady=(0, 10))
 
@@ -169,7 +166,8 @@ class G4toxxApp(ctk.CTk):
     def setup_patcher_ui(self):
         self.p_console = ctk.CTkTextbox(self.tab_patch, width=650, height=250, fg_color="#0a0a0a", text_color=COLOR_ACCENT, font=("Consolas", 12))
         self.p_console.pack(pady=20)
-        self.p_console.insert("0.0", f">>> CAMINHO: {SPOTIFY_EXE}\n>>> STATUS: AGUARDANDO COMANDO")
+        
+        self.p_console.insert("0.0", f">>> CAMINHO DETECTADO: {SPOTIFY_EXE}\n>>> STATUS: AGUARDANDO COMANDO")
 
         self.btn_run = ctk.CTkButton(self.tab_patch, text="EXECUTAR FULL PATCH", fg_color=COLOR_ACCENT, hover_color="#990000", height=50, font=("Arial", 18, "bold"), command=self.start_patch_thread)
         self.btn_run.pack(pady=10)
@@ -198,7 +196,7 @@ class G4toxxApp(ctk.CTk):
         self.log("Injetando código no XPUI.SPA...")
         try:
             if not os.path.exists(SPOTIFY_SPA):
-                self.log(f"ERRO: Arquivo {SPOTIFY_SPA} não encontrado!")
+                self.log(f"ERRO: Arquivo {SPOTIFY_SPA} não encontrado! Verifique o caminho.")
                 return
 
             with tempfile.TemporaryDirectory() as tmp:
@@ -224,7 +222,7 @@ class G4toxxApp(ctk.CTk):
             self.log(f"ERRO CRÍTICO: {str(e)}")
 
     # ============================================================
-    # FUNÇÕES DE LÓGICA DO PLAYER (BUSCA E PLAYLIST)
+    # FUNÇÕES DE LÓGICA DO PLAYER
     # ============================================================
     def format_time(self, ms):
         if ms < 0: return "00:00"
@@ -255,7 +253,6 @@ class G4toxxApp(ctk.CTk):
     def update_time_loop(self):
         try:
             if self.player:
-                # Se a música acabou (State 6 = Ended), toca a próxima
                 if self.player.get_state() == vlc.State.Ended:
                     self.play_next()
 
@@ -281,7 +278,6 @@ class G4toxxApp(ctk.CTk):
         try:
             ydl_opts = {'quiet': True, 'extract_flat': True}
             
-            # MAGIA DO LOGIN: Puxa os cookies do navegador escolhido
             browser = self.browser_var.get()
             if browser != "Nenhum":
                 ydl_opts['cookiesfrombrowser'] = (browser,)
@@ -299,7 +295,6 @@ class G4toxxApp(ctk.CTk):
                 
                 ctk.CTkLabel(row, text=f"{title[:50]}...", anchor="w").pack(side="left", fill="x", expand=True)
                 
-                # Botão para adicionar à fila
                 btn_add = ctk.CTkButton(row, text="+ Fila", width=60, fg_color="#333", hover_color=COLOR_ACCENT, 
                                         command=lambda u=url, t=title: self.add_to_playlist(u, t))
                 btn_add.pack(side="right")
@@ -313,7 +308,6 @@ class G4toxxApp(ctk.CTk):
         self.playlist.append(song)
         self.update_playlist_ui()
         
-        # Se for a primeira música, já dá o play automático
         if len(self.playlist) == 1 and not self.player.is_playing():
             self.current_song_index = 0
             self.start_play_thread(song)
@@ -350,7 +344,6 @@ class G4toxxApp(ctk.CTk):
             
             ydl_opts = {'format': 'bestaudio/best', 'quiet': True}
             
-            # Usa os cookies também na hora de tocar o áudio
             browser = self.browser_var.get()
             if browser != "Nenhum":
                 ydl_opts['cookiesfrombrowser'] = (browser,)
