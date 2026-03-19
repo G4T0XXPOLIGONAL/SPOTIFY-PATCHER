@@ -1,0 +1,5 @@
+# Ignorar arquivos do PyInstaller
+build/
+dist/
+*.spec
+__pycache__/
